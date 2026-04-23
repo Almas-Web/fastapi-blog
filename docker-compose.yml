@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:15
+    container_name: blog_api
+    restart: always
+    environment:
+      POSTGRES_USER: dummy_user
+      POSTGRES_PASSWORD: blog_pass
+      POSTGRES_DB: blog_db
+    ports:
+      - "5465:5432"
+    volumes:
+      - fastapi_blog_pgdata:/var/lib/postgresql/data
+
+volumes:
+  fastapi_blog_pgdata:
