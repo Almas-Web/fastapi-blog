@@ -1,16 +1,27 @@
 from typing import Optional
-
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from db.models.blog import Blog
-from schemas.blog import BlogCreate, BlogPagination,BlogUpdate
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
+
+from db.models.blog import Blog
+from schemas.blog import BlogCreate, BlogPagination, BlogUpdate
+from slugify import slugify
 
 
 class BlogRepository:
     def __init__(self, db: Session):
         self.db = db
+
+    # ================= HELPER =================
+    def get_blog_or_404(self, blog_id: int) -> Blog:
+        db_blog = self.db.query(Blog).filter(Blog.id == blog_id).first()
+        if not db_blog:
+            raise HTTPException(
+                status_code=404,
+                detail="Blog not found"
+            )
+        return db_blog
 
     # ================= CREATE BLOG =================
     def create_blog(self, blog: BlogCreate, author_id: int) -> Blog:
@@ -29,7 +40,7 @@ class BlogRepository:
             self.db.rollback()
             raise HTTPException(
                 status_code=400,
-                detail="something went wrong!"
+                detail="Something went wrong!"
             )
 
         return db_blog
@@ -43,37 +54,35 @@ class BlogRepository:
             total_count=total_count,
             skip=skip,
             limit=limit,
-            data=blogs   # ✅ FIX (NO from_orm needed)
+            data=blogs
         )
 
     # ================= GET SINGLE BLOG =================
     def get_blog(self, blog_id: int) -> Blog:
-        blog = self.db.query(Blog).filter(Blog.id == blog_id).first()
+        return self.get_blog_or_404(blog_id)
 
-        if not blog:
-            raise HTTPException(
-                status_code=404,
-                detail="Blog not found"
-            )
+    # ================= UPDATE BLOG =================
+    def update_blog(self, blog_id: int, blog: BlogUpdate) -> Blog:
+        db_blog = self.get_blog_or_404(blog_id)
 
-        return blog
-    def update_blog(self,blog_id:int,blog:BlogUpdate)-> Optional[Blog]:
-        """
-        update an esisting blog by its id 
-        """
-        db_blog=self.db.query(Blog).filter(Blog.id==blog_id).first()
-        if not db_blog:
-            raise HTTPException(status_code=404,detail="Blog not found!")
-        if blog.title is not None :
-            db_blog.title =blog.title
-            # auto regenerate slug
-            from slugify import slugify
+        if blog.title is not None:
+            db_blog.title = blog.title
             db_blog.slug = f"{slugify(blog.title)}-{blog_id}"
 
         if blog.content is not None:
-            db_blog.content =blog.content
+            db_blog.content = blog.content
+
         if blog.is_active is not None:
-            db_blog.is_active =blog.is_active
+            db_blog.is_active = blog.is_active
+
         self.db.commit()
         self.db.refresh(db_blog)
         return db_blog
+
+    # ================= DELETE BLOG =================
+    def delete_blog(self, blog_id: int) -> bool:
+        db_blog = self.get_blog_or_404(blog_id)
+
+        self.db.delete(db_blog)
+        self.db.commit()
+        return True

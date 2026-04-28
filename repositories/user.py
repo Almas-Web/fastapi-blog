@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from typing import Optional
+from typing import Optional,List
 from db.models.user import User 
 from fastapi import HTTPException
 from utils.password_manager import PasswordManager
@@ -12,6 +12,14 @@ class UserRepository:
 
     def get_user_by_email(self, email: str) -> Optional[User]:
         return self.db.query(User).filter(User.email == email).first()
+
+    #Get all user with order 
+    def get_all_users(self)->List[User]:
+        return(
+            self.db.query(User)
+            .order_by(User.id.desc())
+            .all()
+        )
 
     def create_user(
         self,
