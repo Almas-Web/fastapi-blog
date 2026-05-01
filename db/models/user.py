@@ -12,3 +12,4 @@ class User(Base):
     is_superuser=Column(Boolean(),default=False)
     is_active = Column(Boolean(), default=True)
     blogs = relationship("Blog", back_populates="author")
+    image_url=Column(String,nullable=True)

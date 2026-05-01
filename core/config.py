@@ -13,4 +13,9 @@ class Settings():
     POSTGRES_PORT: str = os.getenv("POSTGRES_PORT")
     POSTGRES_DB: str = os.getenv("POSTGRES_DB")
     DATABASE_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_SERVER}:{POSTGRES_PORT}/{POSTGRES_DB}"
+
+    SECRET_KEY :str = os.getenv("SECRET_KEY")
+    ACCESS_TOKEN_EXPIRE_MINUTES :int =5
+    REFRESH_TOKEN_EXPIRE_MINUTES :int =2
+    JWT_ALGORITHM :str ="HS256"
 settings = Settings()

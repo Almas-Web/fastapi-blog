@@ -1,9 +1,17 @@
+import os
+
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from typing import Optional,List
 from db.models.user import User 
-from fastapi import HTTPException
+from fastapi import Depends, HTTPException,status
+from utils.const import UPLOAD_FOLDER
 from utils.password_manager import PasswordManager
+from utils.jwt_manager import verify_token
+from fastapi.security import OAuth2PasswordBearer
+from db.session import get_db
+
+oauth2_scheme=OAuth2PasswordBearer(tokenUrl="/users/token")
 
 
 class UserRepository:
@@ -52,3 +60,57 @@ class UserRepository:
             )
 
         return db_user
+    
+    def get_user_by_id(self,id:int)->Optional[User]:
+        return self.db.query(User).filter(User.id==id,User.is_active==True).first()
+    def get_user_for_token(self,email:str,password:str)->Optional[User]:
+        user=self.get_user_by_email(email=email)
+        if not user:
+            raise HTTPException(status_code=401,detail="Invalid credentials")
+        is_password_matched=PasswordManager.verify_password(password,user.password)
+        if not is_password_matched:
+            raise HTTPException(status_code=401,detail="Invalid credentials")
+        return user
+    @staticmethod
+    def get_current_user(token:str=Depends(oauth2_scheme),db:Session=Depends(get_db)):
+        payload=verify_token(token)
+        if payload is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Invalid token")
+        user_id = int(payload.get("sub"))
+
+        user = db.query(User).filter(User.id == user_id).first()
+
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+
+        return user
+    
+    def remove_previous_image(self, old_image_path):
+        try:
+            old_image_file_path = os.path.join(UPLOAD_FOLDER, old_image_path)
+
+            if os.path.exists(old_image_file_path):
+                os.remove(old_image_file_path)
+
+        except Exception as e:
+            print(e)
+            return False
+
+        return True
+
+
+    def save_image_path_to_db(self, user: User, new_image_path: str):
+        user.image_url = new_image_path
+
+        try:
+            self.db.commit()
+            self.db.refresh(user)
+            return user
+
+        except Exception as e:
+            self.db.rollback()
+            print(e)
+            return None
