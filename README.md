@@ -1,20 +1,19 @@
 # 🚀 FastAPI Blog API
 
-A simple and scalable Blog API built with FastAPI, SQLAlchemy, and Pydantic following a clean repository pattern architecture.
+A scalable and modular Blog API built with **FastAPI**, **SQLAlchemy**, and **Pydantic**, following a clean **Repository Pattern Architecture**.
 
 ---
 
 ## ✨ Features
 
-- User creation API
-- Create blog posts
-- Get all blogs (pagination support)
-- Get single blog by ID
-- Update blog
-- ORM relationships (User → Blog)
-- Auto slug generation
-- Repository pattern architecture
-- Pydantic validation (v1)
+- 👤 User registration and management
+- 📝 Create, update, and delete blog posts
+- 📄 Get all blogs with pagination support
+- 🔍 Get single blog by ID
+- 🔗 ORM relationships (User → Blogs)
+- 🔥 Auto slug generation for blogs
+- 🏗️ Clean repository-based architecture
+- ✅ Pydantic validation (v1)
 
 ---
 
