@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Column, DateTime, Integer, String, Boolean
 from sqlalchemy.orm import relationship
 from db.base_class import Base
 
@@ -13,3 +13,7 @@ class User(Base):
     is_active = Column(Boolean(), default=True)
     blogs = relationship("Blog", back_populates="author")
     image_url=Column(String,nullable=True)
+
+    #  add these 2 fields
+    reset_token = Column(String, nullable=True)
+    reset_token_expire = Column(DateTime, nullable=True)
