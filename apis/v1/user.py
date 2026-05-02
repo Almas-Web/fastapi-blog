@@ -90,9 +90,20 @@ async def upload_image(
     if not file.content_type.startswith("image"):
         raise HTTPException(status_code=400,
                             detail="Uploaded file is not an image")
+        
     #check the image size also here(not more than 500kb)
+    file_content = await file.read()
+
+    max_size = 500 * 1024  # 500 KB
+
+    if len(file_content) > max_size:
+        raise HTTPException(
+            status_code=400,
+            detail="Image size should not exceed 500KB"
+        )
     
     user_repo=UserRepository(db=db)
+    
     #if  the user already has an image ,remove the old image 
     old_image_path=current_user.image_url
     if old_image_path:
@@ -104,18 +115,13 @@ async def upload_image(
 
     #save the new image file to the server 
     with open(new_file_path,"wb") as buffer:
-        buffer.write(await file.read())
+        buffer.write(file_content)
 
     user_repo.save_image_path_to_db(
         user=current_user,new_image_path=unique_filename
     )
+
     return{
         "success":"Successfully upload image!",
         "path":f"/static/{unique_filename}"
     }
-
-@router.get("/profile", response_model=UserProfileView)
-async def get_current_user_profile(
-    current_user: User = Depends(UserRepository.get_current_user)
-):
-    return current_user

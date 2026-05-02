@@ -38,13 +38,16 @@ class UserProfileView(BaseModel):
     email: str
     is_active: bool
     image_url: str
-
+    
     @validator("image_url")
     def add_static_prefix(cls, v):
+
         if not v:
             return v
-        if v.startswith("/static"):
+
+        if v.startswith(("http://", "https://", "/static")):
             return v
+
         return f"/static/{v}"
 
     class Config:
